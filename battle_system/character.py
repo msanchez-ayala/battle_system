@@ -5,10 +5,12 @@ import math
 from dataclasses import dataclass
 from enum import Enum
 
+MAX_STATS_VAL = 100
+
 
 class DamageMultiplier(Enum):
     NOT_EFFECTIVE = 5
-    NORMAL = 10
+    NORMAL = 0.5
     EFFECTIVE = 20
     CRITICAL = 30
 
@@ -18,6 +20,7 @@ class Stats:
     hp: int
     attack: int
     defense: int
+    speed: int
 
 
 @dataclass
@@ -43,13 +46,13 @@ class Character:
         self.stats.hp -= damage
         if self.stats.hp <= 0:
             self._alive = False
+            self.stats.hp = 0
 
-    def _calculate_damage(self, attack: int) -> None:
+    def _calculate_damage(self, attack: int) -> int:
         """
         Calculate the damage received from the given attack.
         """
-        # atk=1 vs def=100 -> 1 damage
-        # atk = def -> always the same amount of damage?
-        # atk=100 vs def=1 -> ~99 or 100 damage
-        damage = attack - self.stats.defense / attack * DamageMultiplier.NORMAL.value
-        return math.ceil(damage)
+        adjusted_def = MAX_STATS_VAL - self.stats.defense
+        def_buff = (attack - adjusted_def * attack / MAX_STATS_VAL)
+        damage = attack - DamageMultiplier.NORMAL.value * def_buff
+        return math.floor(damage)
